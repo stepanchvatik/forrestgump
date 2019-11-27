@@ -14,5 +14,10 @@ public class Game extends AppCompatActivity {
 
         gameView = new GameView(this);
         setContentView(gameView);
+
+  //  finish();
+    }
+    public void die(){
+
     }
 }
