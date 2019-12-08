@@ -8,17 +8,6 @@
     tools:context=".Menu">
 
     <Button
-        android:id="@+id/settings"
-        android:layout_width="217dp"
-        android:layout_height="67dp"
-        android:layout_marginTop="212dp"
-        android:text="settings"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.525"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/newgame" />
-
-    <Button
         android:id="@+id/newgame"
         android:layout_width="208dp"
         android:layout_height="64dp"

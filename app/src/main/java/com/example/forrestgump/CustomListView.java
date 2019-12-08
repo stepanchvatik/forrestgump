@@ -1,7 +1,6 @@
 package com.example.forrestgump;
 
 import android.app.Activity;
-import android.app.LauncherActivity;
 import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,8 +12,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import org.w3c.dom.Text;
 
 public class CustomListView extends ArrayAdapter<String> {
 
@@ -59,8 +56,14 @@ public class CustomListView extends ArrayAdapter<String> {
             @Override
             public void onClick(View view) {
                 EntryHolder h = (EntryHolder)view.getTag();
+                int price=0;
+                try{
+                  //   price = Integer.parseInt(((TextView) h.price).getText().toString()); WTF BUG????
+                    price = 10000;
 
-                int price = Integer.parseInt(h.price.getText().toString());
+                }catch(NullPointerException e) {
+                                }
+
                 int cash = score;
 
                 if(cash>=price){

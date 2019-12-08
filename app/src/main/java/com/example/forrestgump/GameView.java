@@ -61,6 +61,8 @@ public class GameView extends View {
 
 
     boolean alive = true;
+
+    int highestScore;
     int armor;
     int boots;
     int dWidth, dHeight;
@@ -91,11 +93,15 @@ public class GameView extends View {
         display.getSize(point);
         dWidth = point.x;
         dHeight = point.y;
+
         rect1 = new Rect(0,0,dWidth,dHeight);
         rect2 = new Rect(0,-dHeight,dWidth,0);
         forrests = new Bitmap[3];
         forrests[0] = BitmapFactory.decodeResource(getResources(),R.drawable.forrest0);
         forrests[1] = BitmapFactory.decodeResource(getResources(),R.drawable.forrest1);
+        forrestX = dWidth/2-forrests[0].getWidth()/2;
+        forrestY = dHeight/2-forrests[0].getHeight()/2;
+
         debris = new Bitmap[1];
         debris[0] = BitmapFactory.decodeResource(getResources(),R.drawable.stone);
         for(int i = 0; i < 30; i++){
@@ -103,22 +109,53 @@ public class GameView extends View {
             int y = (-500 * i) - rand.nextInt((500) + 1) ;
            debrises[i] = new Debris(x,y,0);
         }
-        forrestX = dWidth/2-forrests[0].getWidth()/2;
-        forrestY = dHeight/2-forrests[0].getHeight()/2;
+
         bg1y = 0;
         bg2y = point.y;
         paint.setColor(Color.BLACK);
         paint.setTextSize(50);
+
         oldScore = pref.getInt("score",-1);
         score+=oldScore;
+
         sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        gyroscopeListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent sensorEvent) {
+                Log.d("KRUST","X: " + sensorEvent.values[0] + " Y:" + sensorEvent.values[1] + " Z:" + sensorEvent.values[2]);
+                if(sensorEvent.values[0] > 0.7f){
+                    moving=1;
+                }else if(sensorEvent.values[0] < -0.7f){
+                    moving=2;
+                }else if(sensorEvent.values[0] > 0.5f || sensorEvent.values[0] < -0.5f){
+                    moving = 0;
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int i) {
+
+            }
+        };
+
+
         Cursor data = databaseHelper.getItems();
         while(data.moveToNext()){
             armor =Integer.valueOf(data.getString(0));
             boots =Integer.valueOf(data.getString(1));
-
         }
+        data = databaseHelper.getHighestScore();
+        if(data.getCount()>0){
+            while(data.moveToNext()){
+                highestScore = data.getInt(0);
+            }
+        }else{
+            highestScore=0;
+        }
+
+
+
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         configureTwitter();
@@ -128,24 +165,7 @@ public class GameView extends View {
         Toast toast = Toast.makeText(context,message,Toast.LENGTH_LONG);
         toast.show();
 
-        gyroscopeListener = new SensorEventListener() {
-            @Override
-            public void onSensorChanged(SensorEvent sensorEvent) {
-                Log.d("KRUST","X: " + sensorEvent.values[0] + " Y:" + sensorEvent.values[1] + " Z:" + sensorEvent.values[2]);
-              if(sensorEvent.values[0] > 0.7f){
-                    moving=1;
-              }else if(sensorEvent.values[0] < -0.7f){
-                    moving=2;
-              }else if(sensorEvent.values[0] > 0.5f || sensorEvent.values[0] < -0.5f){
-                  moving = 0;
-              }
-            }
 
-            @Override
-            public void onAccuracyChanged(Sensor sensor, int i) {
-
-            }
-        };
     }
 
     @Override
@@ -220,9 +240,14 @@ public class GameView extends View {
                         armor--;
 
                         if(armor<0){
-                            handler.removeCallbacksAndMessages(null);
                             alive=false;
                             sendTweet(this,"Forrest ran " + String.valueOf(score-oldScore) + " meters");
+                            if((score-oldScore)>highestScore){
+                                databaseHelper.updateScore(score-oldScore);
+                                sendTweet(this,"Forrest also ran more than he ever did!");
+                            }
+                            handler.removeCallbacksAndMessages(null);
+
                         }else{
                             String message = "Armor: " +  String.valueOf(armor);
                             Toast toast = Toast.makeText(getContext(),message,Toast.LENGTH_SHORT);

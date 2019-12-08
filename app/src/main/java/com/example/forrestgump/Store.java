@@ -1,27 +1,17 @@
 package com.example.forrestgump;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.lang.reflect.Array;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.ArrayList;
-import java.util.List;
 
 
 public class Store extends AppCompatActivity {
@@ -40,8 +30,17 @@ public class Store extends AppCompatActivity {
         itemsList = (ListView) findViewById(R.id.itemsList);
         databaseHelper = new DatabaseHelper(this);
         populateItems();
-
-
+        Cursor data = databaseHelper.getHighestScore();
+        String highestScore = "";
+        if(data.getCount()>0){
+            while(data.moveToNext()){
+                highestScore =data.getString(0);
+            }
+        }else{
+            highestScore="";
+        }
+        TextView highest = findViewById(R.id.highest);
+        highest.setText(highestScore);
 
     }
 

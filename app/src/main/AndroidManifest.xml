@@ -10,9 +10,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".Settings"
-            android:label="@string/title_activity_settings"></activity>
         <activity android:name=".Store" />
         <activity android:name=".Game" />
         <activity android:name=".Menu">

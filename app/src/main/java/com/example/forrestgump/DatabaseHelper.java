@@ -56,7 +56,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return res;
     }
 
-    public Cursor getHighestScore(int score) {
+    public Cursor getHighestScore() {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor res = db.rawQuery("select max(SCORE) from SCORES",null);
 
