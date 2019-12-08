@@ -3,6 +3,7 @@ package com.example.forrestgump;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -15,17 +16,28 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
+import java.util.Date;
 import java.util.Random;
+
+import twitter4j.Status;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
+import twitter4j.conf.ConfigurationBuilder;
 
 import static android.content.Context.SENSOR_SERVICE;
 
 public class GameView extends View {
     Context parent;
+    Twitter twitter;
+
     private int UPDATE_MILIS=30;
     Handler handler;
     Runnable runnable;
@@ -37,7 +49,7 @@ public class GameView extends View {
     Rect rect1,rect2;
     Rect helperRect;
     SoundPlayer sound;
-    Debris[] debrises = new Debris[10];
+    Debris[] debrises = new Debris[30];
     Random rand = new Random();
     Paint paint = new Paint();
     SharedPreferences pref = getContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
@@ -45,8 +57,12 @@ public class GameView extends View {
     SensorManager sensorManager;
     Sensor accelerometer;
     SensorEventListener gyroscopeListener;
+    DatabaseHelper databaseHelper = new DatabaseHelper(getContext());
+
 
     boolean alive = true;
+    int armor;
+    int boots;
     int dWidth, dHeight;
     int forrestFrame = 0;
     int forrestX, forrestY;
@@ -57,6 +73,7 @@ public class GameView extends View {
     int oldScore = 0;
     int timeAlive = 0;
     public GameView(Context context){
+
         super(context);
         parent = context;
         sound = new SoundPlayer(getContext());
@@ -81,7 +98,7 @@ public class GameView extends View {
         forrests[1] = BitmapFactory.decodeResource(getResources(),R.drawable.forrest1);
         debris = new Bitmap[1];
         debris[0] = BitmapFactory.decodeResource(getResources(),R.drawable.stone);
-        for(int i = 0; i < 10; i++){
+        for(int i = 0; i < 30; i++){
             int x = rand.nextInt((500) + 1);
             int y = (-500 * i) - rand.nextInt((500) + 1) ;
            debrises[i] = new Debris(x,y,0);
@@ -96,6 +113,20 @@ public class GameView extends View {
         score+=oldScore;
         sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        Cursor data = databaseHelper.getItems();
+        while(data.moveToNext()){
+            armor =Integer.valueOf(data.getString(0));
+            boots =Integer.valueOf(data.getString(1));
+
+        }
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        configureTwitter();
+        sendTweet(this,"Run, Forrest, run!");
+
+        String message = "Armor: " +  String.valueOf(armor);
+        Toast toast = Toast.makeText(context,message,Toast.LENGTH_LONG);
+        toast.show();
 
         gyroscopeListener = new SensorEventListener() {
             @Override
@@ -105,7 +136,7 @@ public class GameView extends View {
                     moving=1;
               }else if(sensorEvent.values[0] < -0.7f){
                     moving=2;
-              }else{
+              }else if(sensorEvent.values[0] > 0.5f || sensorEvent.values[0] < -0.5f){
                   moving = 0;
               }
             }
@@ -144,12 +175,12 @@ public class GameView extends View {
             if(moving>0){
                 switch(moving){
                     case 1:
-                        if(forrestX > 20)
-                        forrestX-=20;
+                        if(forrestX > 300)
+                        forrestX-=boots*6;
                         break;
                     case 2:
-                        if(forrestX < dWidth-forrests[0].getWidth())
-                        forrestX+=20;
+                        if(forrestX < dWidth-forrests[0].getWidth()-250)
+                        forrestX+=boots*6;
                 }
             }
             rect1.top+=10;
@@ -186,7 +217,18 @@ public class GameView extends View {
                             debrises[i].y-forrests[0].getHeight()+120 < forrestY){
                         debrises[i].alive = false;
                         sound.playCrashSound();
-                        //handler.removeCallbacksAndMessages(null);
+                        armor--;
+
+                        if(armor<0){
+                            handler.removeCallbacksAndMessages(null);
+                            alive=false;
+                            sendTweet(this,"Forrest ran " + String.valueOf(score-oldScore) + " meters");
+                        }else{
+                            String message = "Armor: " +  String.valueOf(armor);
+                            Toast toast = Toast.makeText(getContext(),message,Toast.LENGTH_SHORT);
+                            toast.show();
+                        }
+                        //
 
                     }
                 }
@@ -242,6 +284,33 @@ public class GameView extends View {
         }
 
         return true;
+    }
+
+    public void configureTwitter() {
+        ConfigurationBuilder cb = new ConfigurationBuilder();
+        cb.setDebugEnabled(true)
+                .setOAuthConsumerKey("oEJEAxEPjNgWb0O35QNVaA")
+                .setOAuthConsumerSecret("2TyiPmQMpnYHPE3S8ITkIQWld5fjk6jQ5eGfTsG8kg")
+                .setOAuthAccessToken("927024486-4X07W3nTicx2SG0dTccqsNzraAyT1G8Ffc4VvNqN")
+                .setOAuthAccessTokenSecret("neehbYt9lBY6o29UdcMLsZ1Zs9vVLPPncOpivLoyXtA");
+
+        //cb.setUseSSL(true);
+        TwitterFactory tf = new TwitterFactory(cb.build());
+        twitter = tf.getInstance();
+    }
+
+    public void sendTweet(View view,String message) {
+
+        Date d = new Date();
+
+        try {
+            Status status = twitter.updateStatus(message);
+        } catch (TwitterException e) {
+            // TODO Auto-generated catch block
+            // oops
+            e.printStackTrace();
+        }
+
     }
 
 }

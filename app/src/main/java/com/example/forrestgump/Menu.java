@@ -11,7 +11,7 @@ import android.widget.Button;
 
 public class Menu extends AppCompatActivity {
 
-
+    DatabaseHelper db = new DatabaseHelper(this);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,7 +25,6 @@ public class Menu extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(),Game.class);
                 startActivity(intent);
-
             }
         });
 
@@ -35,6 +34,17 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(),Store.class);
+                startActivity(intent);
+
+            }
+        });
+
+        Button settings = (Button) findViewById(R.id.settings);
+        settings.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(),Settings.class);
                 startActivity(intent);
 
             }

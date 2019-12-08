@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.forrestgump">
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -9,7 +10,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Store"></activity>
+        <activity
+            android:name=".Settings"
+            android:label="@string/title_activity_settings"></activity>
+        <activity android:name=".Store" />
         <activity android:name=".Game" />
         <activity android:name=".Menu">
             <intent-filter>
