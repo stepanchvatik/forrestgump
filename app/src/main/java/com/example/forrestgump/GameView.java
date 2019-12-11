@@ -295,7 +295,7 @@ public class GameView extends View {
         switch(action){
             case MotionEvent.ACTION_DOWN:
                 Log.d("krust","down");
-                if(x < 400){
+                if(x < forrestX+20){
                     moving = 1;
                 }else{
                     moving = 2;
